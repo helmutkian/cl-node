@@ -2,6 +2,8 @@
 
 CL-Node allows you to run Node.js as a thread within your Common Lisp process. You can evaluate and invoke JavaScript code on the fly.
 
+CL-Node is built on JXCore: https://github.com/jxcore/jxcore . You will need to clone the JXCore repo and compile it as a shared library following the directions here: https://github.com/jxcore/jxcore/blob/master/doc/HOW_TO_COMPILE.md#compile-as-a-dynamic-library .
+
 This project is **pre-alpha** and is therefore highly unstable. More documentation is to come.
 
 ## Working Examples
