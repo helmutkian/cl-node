@@ -31,5 +31,9 @@ This project is **pre-alpha** and is therefore highly unstable. More documentati
 (js:tick)
 
 ; printed: 33
+
+(js:free js-thunk)
+
+(js:stop-engine)
 ````
 
