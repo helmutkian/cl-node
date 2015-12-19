@@ -9,7 +9,7 @@ This project is **pre-alpha** and is therefore highly unstable. More documentati
 ## Installation
 
 1. Clone this repository.
-2. Download the source for JXCore 3.1.0: https://github.com/jxcore/jxcore/releases/tag/v0.3.1.0
+2. Download the source for JXCore 0.3.1.0: https://github.com/jxcore/jxcore/releases/tag/v0.3.1.0
 3. Unzip the JXCore source into a subdirectory of CL-Node
 4. Within the JXCore directory, configure JXCore to build as a shared library ``./configure --shared-library``. This will build JXCore with V8 as the JavaScript engine. If you wish to use a different engine (SpiderMonkey, Chakra, etc), please see the JXCore documentation: https://github.com/jxcore/jxcore/blob/master/doc/HOW_TO_COMPILE.md
 5. Within the JXCore directory, build JXCore ``make``
