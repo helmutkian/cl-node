@@ -69,9 +69,8 @@
 (defmethod cffi:translate-into-foreign-memory ((value integer) (type jx:jx-value-type) js-value)
   (new js-value :int32 value))
 
-;; TODO Convert to double
 (defmethod cffi:translate-into-foreign-memory ((value number) (type jx:jx-value-type) js-value)
-  (new js-value :double value))
+  (new js-value :double (coerce value 'double-float)))
 
 (defmethod cffi:translate-into-foreign-memory ((value null) (type jx:jx-value-type) js-value)
   (new js-value :null))
