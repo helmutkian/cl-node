@@ -170,12 +170,8 @@
 
 ;;; **************************************************
 
-;; Do nothing
-(cffi:defcallback void-cb :void ((args :pointer) (argc :int))
-  (declare (ignore args argc)))
-
 (defun init-engine ()
-  (jx:initialize "" (cffi:callback void-cb))
+  (jx:initialize-once "")
   (jx:initialize-new-engine)
   (jx:define-main-file "console.log('Engine Started');")
   (jx:define-extension "cl_return" (cffi:callback cl-return)))

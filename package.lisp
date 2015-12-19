@@ -5,6 +5,7 @@
 	   #:jx-value
 	   #:jx-value-type
 	   #:initialize
+	   #:initialize-once
 	   #:initialize-new-engine
 	   #:define-extension
 	   #:define-main-file

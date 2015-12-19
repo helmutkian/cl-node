@@ -1,6 +1,6 @@
 (in-package :cl-node.jx)
 
-(pushnew #p"/home/helmutkian/Development/js/jxcore/out/Release/"
+(pushnew #p"jxcore/out/Release/"
 	 cffi:*foreign-library-directories*)
 
 (cffi:define-foreign-library libjx
@@ -32,7 +32,10 @@
     
 (cffi:use-foreign-library libjx)	
 
+;; JX_Initialize depricated in favor of JX_InitializeOnce
 (cffi:defcfun ("JX_Initialize" initialize) :void (home-folder :string) (callback :pointer))
+
+(cffi:defcfun ("JX_InitializeOnce" initialize-once) :void (home-folder :string))
 
 (cffi:defcfun ("JX_InitializeNewEngine" initialize-new-engine)  :void)
 
