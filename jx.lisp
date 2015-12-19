@@ -1,7 +1,8 @@
 (in-package :cl-node.jx)
 
-(pushnew #p"jxcore/out/Release/"
-	 cffi:*foreign-library-directories*)
+(pushnew (first (directory #p"*/out/Release/"))
+	 cffi:*foreign-library-directories*
+	 :test #'equal)
 
 (cffi:define-foreign-library libjx
   (:unix (:or "libjx.so")))
