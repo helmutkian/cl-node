@@ -50,3 +50,14 @@ This project is **pre-alpha** and is therefore highly unstable. More documentati
 (js:stop-engine)
 ````
 
+## Road Map
+
+These are the major TODO items before CL-Node enter the alpha stage
+
+* Tests
+* Documentation
+* Being able to pass callbacks from Common Lisp into JavaScript that can be invoked repeatedly. This can be done, **BUT** currently re-invokable callbacks must live as long as the JavaScript engine is still running since it's unknown when it will be garbage collected within the JavaScript engine. This could yield memory leaks if used carelessly. This issue would be resolved if JXCore allowed for weak references (see this JXCore issue: https://github.com/jxcore/jxcore/issues/742).
+* Handling binary data being passed into and out of JavaScript. What to do with JS Buffer objects?
+* Since the JavaScript engine runs on a separate thread, a mechanism for joining back to the parent CL thread. Perhaps using a blocking ``with-event-loop`` construct such as cl-async (https://github.com/orthecreedence/cl-async) has.
+* Allowing for definitions of JavaScript classes to prevent serialization/deserialization of JS objects when being returned from JavaScript functions. (Currently JS Object and Array object are returned as JSON).
+* Portable automated build for downloading and compiling the JXCore shared library.
