@@ -52,7 +52,7 @@ This project is **pre-alpha** and is therefore highly unstable. More documentati
 
 ## Road Map
 
-These are the major TODO items before CL-Node enter the alpha stage
+These are the major TODO items before can CL-Node enter the alpha stage
 
 * Tests
 * Documentation
