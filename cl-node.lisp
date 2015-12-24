@@ -87,24 +87,58 @@
 (defmethod cffi:translate-into-foreign-memory ((value (eql t)) (type jx:jx-value-type) js-value)
   (new js-value :boolean value))
 
+(defmethod cffi:translate-into-foreign-memory ((value js-value-handle) (type jx:jx-value-type) js-value)
+  (cffi:foreign-funcall "memcpy"
+			:pointer js-value
+			:pointer (js-value value)
+			:int (cffi:foreign-type-size '(:struct jx:jx-value))
+			:void))
 
 ;;; **************************************************
 
 ;;; **************************************************
 
-(defvar *js-callbacks*
+(defvar *callbacks*
   (make-hash-table :test 'equal))
 
-(defun register-callback (callback)
-  (let ((callback-id (string (gensym))))
-    (setf (gethash callback-id *js-callbacks*) callback)
-    callback-id))
+(defclass callback-handle (js-value-handle)
+  ((cb :initarg :cb
+       :reader cb)
+   (persistent :initarg :persistent
+	       :reader persistentp)))
 
-(defun invoke-callback (callback-id)
-  (let ((callback (gethash callback-id *js-callbacks*)))
-    (remhash callback-id *js-callbacks*)
-    callback))
+(defun make-callback (fn &key persistent)
+  (flet ((make-callback-js-code (id)
+	   (concatenate 'string
+			"(function(){ console.log(arguments); process.natives.cl_call.apply(null,['"
+			id
+			"'].concat(Array.prototype.slice.call(arguments)))})")))
+  (let* ((id (string (gensym)))
+	 (js-value (js-value (evaluate (make-callback-js-code id)))))
+    (setf (gethash id *callbacks*)
+	  (make-instance 'callback-handle
+			 :js-value js-value
+			 :persistent persistent
+			 :cb fn)))))
 
+(cffi:defcallback cl-call :void ((args :pointer) (argc :int))
+  (let* ((callback-id (convert-js-value (cffi:mem-aptr args '(:struct jx:jx-value) 0)))
+	 (callback-handle (gethash callback-id *callbacks*))
+	 (converted-args
+	  (loop
+	     for i from 1 to (1- argc)
+	     collect (convert-js-value (cffi:mem-aptr args '(:struct jx:jx-value) i)))))
+    (apply (cb callback-handle) converted-args)
+    (unless (persistentp callback-handle)
+      (remhash callback-id *callbacks*)
+      (free callback-handle))))
+      
+  
+;;; **************************************************
+
+;;; **************************************************
+
+      
 (defun call-function (js-value-handle &rest args)
   (without-fp-traps
     (let ((num-args (length args))
@@ -136,36 +170,6 @@
 	  (jx:free result)
 	  (cffi:foreign-free result))))))
 	  
-
-(defun wrap-js-code (js-code)
-  (concatenate 'string
-	       "(function () {"
-	       "var callbackId = arguments[0];"
-	       "var callback = function (result) { process.natives.cl_return(callbackId, result); };"
-	       "var args = Array.prototype.slice.call(arguments);"
-	       "args[0] = callback;"
-	       "("
-	       js-code
-	       ").apply(null, args);"
-	       "})"))
-
-
-(defun make-thunk (js-code)
-  (let ((wrapped-code (wrap-js-code js-code)))
-    (evaluate (wrap-js-code js-code))))
-
-(defun run (thunk callback &rest args)
-  (let ((callback-id (register-callback callback)))
-    (apply #'call-function thunk callback-id args)))
-  
-(cffi:defcallback cl-return :void ((args :pointer) (argc :int))
-  (declare (ignore argc))
-  (let ((callback-id
-	 (convert-js-value (cffi:mem-aptr args '(:struct jx:jx-value) 0)))
-	(result
-	 (convert-js-value (cffi:mem-aptr args '(:struct jx:jx-value) 1))))
-    (funcall (invoke-callback callback-id) result)))
-
 ;;; **************************************************
 
 ;;; **************************************************
@@ -174,7 +178,7 @@
   (jx:initialize-once "")
   (jx:initialize-new-engine)
   (jx:define-main-file "console.log('Engine Started');")
-  (jx:define-extension "cl_return" (cffi:callback cl-return)))
+  (jx:define-extension "cl_call" (cffi:callback cl-call)))
 
 (defun start-engine ()
   (without-fp-traps (jx:start-engine)))
