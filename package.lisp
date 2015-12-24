@@ -46,13 +46,13 @@
   (:nicknames #:js)
   (:use #:cl)
   (:export #:js-value-handle
+	   #:callback-handle
 	   #:free
 	   #:convert-js-type
 	   #:make-js-value
+	   #:make-callback
 	   #:evaluate
 	   #:call-function
-	   #:make-thunk
-	   #:run
 	   #:init-engine
 	   #:start-engine
 	   #:stop-engine
