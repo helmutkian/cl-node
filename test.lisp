@@ -16,7 +16,8 @@
     (js:call-function js-fn
 		      (js:make-callback (lambda (x) (setf result x))))
     (js:tick)
-    (5am:is (string= "test" result))))
+    (5am:is (string= "test" result))
+    (js:free js-fn)))
 
 (defun run-tests ()
   (5am:run! 'cl-node.test))
