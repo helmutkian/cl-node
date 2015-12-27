@@ -57,3 +57,7 @@
 	   #:start-engine
 	   #:stop-engine
 	   #:tick))
+
+(defpackage #:cl-node.test
+  (:use #:cl)
+  (:export #:run-tests))
