@@ -61,3 +61,4 @@ These are the major TODO items before can CL-Node enter the alpha stage
 * Since the JavaScript engine runs on a separate thread, a mechanism for joining back to the parent CL thread. Perhaps using a blocking ``with-event-loop`` construct such as cl-async (https://github.com/orthecreedence/cl-async) has.
 * Allowing for definitions of JavaScript classes to prevent serialization/deserialization of JS objects when being returned from JavaScript functions. (Currently JS Object and Array object are returned as JSON).
 * Portable automated build for downloading and compiling the JXCore shared library.
+* Handling JavaScript errors
