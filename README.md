@@ -31,7 +31,7 @@ This project is **pre-alpha** and is therefore highly unstable. More documentati
 (js:call-function js-fn)
 ; => 1
 
-(js:free js-fun)
+(js:free js-fn)
 
 ;; Return a closure from JS that can asynchronously return control flow to Common Lisp
 
