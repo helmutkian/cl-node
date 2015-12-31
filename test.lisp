@@ -21,8 +21,8 @@
 
 (5am:test test-cl-evaluate
   (5am:is
-   (string= "testab"
-	    (js:evaluate "('test' + CL.evaluate('(concatenate \\'string \"a\" \"b\")'))"))))
+   (string= "foobar"
+	    (js:evaluate "('foo' + CL.evaluate('(concatenate \\'string \"ba\" \"r\")'))"))))
 
 (defun run-tests ()
   (5am:run! 'cl-node.test))

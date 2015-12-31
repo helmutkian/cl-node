@@ -46,6 +46,11 @@ This project is **pre-alpha** and is therefore highly unstable. More documentati
 
 (js:free js-fn2)
 
+;; Evaluate Common Lisp expressions from inside JS
+
+(js:evaluate "('foo' + CL.evaluate('(concatenate \\'string \"ba\" \"r\")'))")
+=> "foobar"
+
 (js:stop-engine)
 ````
 
