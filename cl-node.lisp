@@ -232,7 +232,6 @@
   (jx:define-main-file "console.log('Engine Started');")
   (jx:define-extension "cl_call" (cffi:callback cl-call))
   (cffi:with-foreign-object (global-js-object '(:struct jx:jx-value))
-    ;; TODO: Free global-object?
     (jx:get-global-object global-js-object)
     (register-cl-callback global-js-object "evaluate" (cffi:callback cl-evaluate))
     (jx:free global-js-object)))
