@@ -15,6 +15,7 @@
 
 ;;; **************************************************
 
+
 (defclass js-value-handle ()
   ((js-value :reader js-value
 	     :initarg :js-value)))
@@ -98,6 +99,45 @@
 
 ;;; **************************************************
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun parse-lambda-list (lambda-list)
+    (let ((state 'start)
+	  (args nil)
+	  (rest nil))
+      (dolist (sym lambda-list (list (nreverse args) rest))
+	(ecase state
+	  (start
+	   (if (eql sym '&rest)
+	       (setf state '&rest)
+	       (push sym args)))
+	  (&rest
+	   (unless rest
+	     (setf rest sym))))))))
+			   
+(defmacro define-js-callback (name args &body body)
+  (let ((js-args (gensym))
+	(num-js-args (gensym)))
+    (destructuring-bind (named-args rest-arg) (parse-lambda-list args)
+      `(cffi:defcallback ,name :void ((,js-args :pointer) (,num-js-args :int))
+	 (let (,@(loop
+		    for arg in named-args
+		    for i from 0
+		    collect `(,arg (convert-js-value (cffi:mem-aptr ,js-args
+								    '(:struct jx:jx-value)
+								    ,i))))
+	       ,@(when rest-arg
+		       `((,rest-arg
+			 (loop
+			    for i from ,(length named-args) to (1- ,num-js-args)
+			    collect (convert-js-value (cffi:mem-aptr ,js-args
+								     '(:struct jx:jx-value)
+								     i)))))))
+	   ,@body)))))
+
+;;; **************************************************
+
+;;; **************************************************
+
 (defvar *callbacks*
   (make-hash-table :test 'equal))
 
@@ -121,18 +161,14 @@
 			 :persistent persistent
 			 :cb fn)))))
 
-(cffi:defcallback cl-call :void ((args :pointer) (argc :int))
-  (let* ((callback-id (convert-js-value (cffi:mem-aptr args '(:struct jx:jx-value) 0)))
-	 (callback-handle (gethash callback-id *callbacks*))
-	 (converted-args
-	  (loop
-	     for i from 1 to (1- argc)
-	     collect (convert-js-value (cffi:mem-aptr args '(:struct jx:jx-value) i)))))
-    (apply (cb callback-handle) converted-args)
+(define-js-callback cl-call (callback-id &rest args)
+  (print 'cl-call)
+  (let ((callback-handle (gethash callback-id *callbacks*)))
+    (print args)
+    (apply (cb callback-handle) args)
     (unless (persistentp callback-handle)
       (remhash callback-id *callbacks*)
-      (free callback-handle))))
-      
+      (free callback-handle))))      
   
 ;;; **************************************************
 
