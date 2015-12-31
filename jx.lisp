@@ -106,5 +106,15 @@
 
 (cffi:defcfun ("JX_SetUndefined" set-undefined) :void (value :pointer))
 
+(cffi:defcfun ("JX_SetNativeMethod" set-native-method) :void (host :pointer) (name :string) (method :pointer))
+
+(cffi:defcfun ("JX_CreateEmptyObject" create-empty-object) :bool (value :pointer))
+
+(cffi:defcfun ("JX_SetNamedProperty" set-named-property) :void (host :pointer) (name :string) (value :pointer))
+
+(cffi:defcfun ("JX_GetGlobalObject" get-global-object) :void (out :pointer))
+
+
+
 
 

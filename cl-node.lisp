@@ -113,26 +113,29 @@
 	  (&rest
 	   (unless rest
 	     (setf rest sym))))))))
-			   
+
 (defmacro define-js-callback (name args &body body)
   (let ((js-args (gensym))
 	(num-js-args (gensym)))
     (destructuring-bind (named-args rest-arg) (parse-lambda-list args)
       `(cffi:defcallback ,name :void ((,js-args :pointer) (,num-js-args :int))
-	 (let (,@(loop
-		    for arg in named-args
-		    for i from 0
-		    collect `(,arg (convert-js-value (cffi:mem-aptr ,js-args
-								    '(:struct jx:jx-value)
-								    ,i))))
-	       ,@(when rest-arg
-		       `((,rest-arg
-			 (loop
-			    for i from ,(length named-args) to (1- ,num-js-args)
-			    collect (convert-js-value (cffi:mem-aptr ,js-args
-								     '(:struct jx:jx-value)
-								     i)))))))
-	   ,@body)))))
+	 (flet ((js-return (value)
+		  (setf (cffi:mem-aref ,js-args '(:struct jx:jx-value) ,num-js-args)
+			value)))
+	   (let (,@(loop
+		      for arg in named-args
+		      for i from 0
+		      collect `(,arg (convert-js-value (cffi:mem-aptr ,js-args
+								      '(:struct jx:jx-value)
+								      ,i))))
+		 ,@(when rest-arg
+			 `((,rest-arg
+			    (loop
+			       for i from ,(length named-args) to (1- ,num-js-args)
+			       collect (convert-js-value (cffi:mem-aptr ,js-args
+									'(:struct jx:jx-value)
+									i)))))))
+	     ,@body))))))
 
 ;;; **************************************************
 
@@ -150,7 +153,7 @@
 (defun make-callback (fn &key persistent)
   (flet ((make-callback-js-code (id)
 	   (concatenate 'string
-			"(function(){ console.log(arguments); process.natives.cl_call.apply(null,['"
+			"(function(){ process.natives.cl_call.apply(null,['"
 			id
 			"'].concat(Array.prototype.slice.call(arguments)))})")))
   (let* ((id (string (gensym)))
@@ -162,9 +165,7 @@
 			 :cb fn)))))
 
 (define-js-callback cl-call (callback-id &rest args)
-  (print 'cl-call)
   (let ((callback-handle (gethash callback-id *callbacks*)))
-    (print args)
     (apply (cb callback-handle) args)
     (unless (persistentp callback-handle)
       (remhash callback-id *callbacks*)
@@ -205,16 +206,37 @@
 	(when (not (jx:is-function result))
 	  (jx:free result)
 	  (cffi:foreign-free result))))))
+
+;;; **************************************************
+
+;;; **************************************************
+
+(define-js-callback cl-evaluate (code)
+  (js-return (eval (read-from-string code))))
 	  
 ;;; **************************************************
 
 ;;; **************************************************
 
+(defun register-cl-callback (global-js-object method-name callback)
+  "This registers a method on the global 'CL' object in JavaScript"
+  (cffi:with-foreign-object (host-js-object '(:struct jx:jx-value))
+    (jx:create-empty-object host-js-object)
+    (jx:set-named-property global-js-object "CL" host-js-object)
+    (jx:set-native-method host-js-object method-name callback)
+    (jx:free host-js-object)))
+    
 (defun init-engine ()
   (jx:initialize-once "")
   (jx:initialize-new-engine)
   (jx:define-main-file "console.log('Engine Started');")
-  (jx:define-extension "cl_call" (cffi:callback cl-call)))
+  (jx:define-extension "cl_call" (cffi:callback cl-call))
+  (cffi:with-foreign-object (global-js-object '(:struct jx:jx-value))
+    ;; TODO: Free global-object?
+    (jx:get-global-object global-js-object)
+    (register-cl-callback global-js-object "evaluate" (cffi:callback cl-evaluate))
+    (jx:free global-js-object)))
+    
 
 (defun start-engine ()
   (without-fp-traps (jx:start-engine)))

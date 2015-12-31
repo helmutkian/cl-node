@@ -40,7 +40,11 @@
 	   #:set-double
 	   #:set-string
 	   #:set-null
-	   #:set-undefined))
+	   #:set-undefined
+	   #:set-native-method
+	   #:create-empty-object
+	   #:set-named-property
+	   #:get-global-object))
 
 (defpackage #:cl-node
   (:nicknames #:js)
