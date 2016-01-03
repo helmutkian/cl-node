@@ -66,7 +66,7 @@
     (:string (jx:set-string js-value value (length value)))
     (:null (jx:set-null js-value))
     (:undefined (jx:set-undefined js-value))))
-
+  
 (defmethod cffi:translate-into-foreign-memory ((value integer) (type jx:jx-value-type) js-value)
   (new js-value :int32 value))
 
@@ -121,7 +121,8 @@
       `(cffi:defcallback ,name :void ((,js-args :pointer) (,num-js-args :int))
 	 (flet ((js-return (value)
 		  (setf (cffi:mem-aref ,js-args '(:struct jx:jx-value) ,num-js-args)
-			value)))
+			value)
+		  (return-from ,name)))
 	   (let (,@(loop
 		      for arg in named-args
 		      for i from 0
@@ -153,9 +154,9 @@
 (defun make-callback (fn &key persistent)
   (flet ((make-callback-js-code (id)
 	   (concatenate 'string
-			"(function(){ process.natives.cl_call.apply(null,['"
+			"(function(){ return process.natives.cl_call.apply(null, ['"
 			id
-			"'].concat(Array.prototype.slice.call(arguments)))})")))
+			"'].concat(Array.prototype.slice.call(arguments))); })")))
   (let* ((id (string (gensym)))
 	 (js-value (js-value (evaluate (make-callback-js-code id)))))
     (setf (gethash id *callbacks*)
@@ -165,11 +166,12 @@
 			 :cb fn)))))
 
 (define-js-callback cl-call (callback-id &rest args)
-  (let ((callback-handle (gethash callback-id *callbacks*)))
-    (apply (cb callback-handle) args)
+  (let* ((callback-handle (gethash callback-id *callbacks*))
+	 (result (apply (cb callback-handle) args)))
     (unless (persistentp callback-handle)
       (remhash callback-id *callbacks*)
-      (free callback-handle))))      
+      (free callback-handle))
+    (js-return result)))
   
 ;;; **************************************************
 
@@ -217,25 +219,13 @@
 ;;; **************************************************
 
 ;;; **************************************************
-
-(defun register-cl-callback (global-js-object method-name callback)
-  "This registers a method on the global 'CL' object in JavaScript"
-  (cffi:with-foreign-object (host-js-object '(:struct jx:jx-value))
-    (jx:create-empty-object host-js-object)
-    (jx:set-named-property global-js-object "CL" host-js-object)
-    (jx:set-native-method host-js-object method-name callback)
-    (jx:free host-js-object)))
     
 (defun init-engine ()
   (jx:initialize-once "")
   (jx:initialize-new-engine)
   (jx:define-main-file "console.log('Engine Started');")
   (jx:define-extension "cl_call" (cffi:callback cl-call))
-  (cffi:with-foreign-object (global-js-object '(:struct jx:jx-value))
-    (jx:get-global-object global-js-object)
-    (register-cl-callback global-js-object "evaluate" (cffi:callback cl-evaluate))
-    (jx:free global-js-object)))
-    
+  (jx:define-extension "cl_eval" (cffi:callback cl-evaluate)))
 
 (defun start-engine ()
   (without-fp-traps (jx:start-engine)))
