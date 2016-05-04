@@ -2,7 +2,8 @@
 
 CL-Node allows you to run Node.js as a thread within your Common Lisp process. You can evaluate and invoke JavaScript code on the fly.
 
-CL-Node is built on JXCore: https://github.com/jxcore/jxcore . 
+CL-Node is built on JXCore: https://github.com/jxcore/jxcore . **Update** Nubsia has halted development of JXCore and there's no guarantee the project will progress to provide a suitable and fully NodeJs compatible platform. This presents two options, one is to directly embed NodeJs or moving away from node to a more limited JavaScript environment such as Jerryscript.
+
 
 This project is **pre-alpha** and is therefore highly unstable. More documentation is to come.
 
